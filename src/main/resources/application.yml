@@ -1,0 +1,25 @@
+
+# Configurações do servidor
+server:
+  port: 8080
+
+# Configurações do banco de dados
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+# Configurações do logging
+logging:
+  level:
+    root: info
+    org.springframework.web: debug
