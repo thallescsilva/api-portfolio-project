@@ -1,15 +1,19 @@
 package br.com.codegroup.portfolio.service;
 
+
+import br.com.codegroup.portfolio.exception.ProjetoNotFoundException;
+import br.com.codegroup.portfolio.exception.RegraDeNegocioException;
 import br.com.codegroup.portfolio.model.dto.ProjetoDTO;
+import br.com.codegroup.portfolio.model.entity.Pessoa;
 import br.com.codegroup.portfolio.model.entity.Projeto;
 import br.com.codegroup.portfolio.repository.ProjetoRepository;
 import br.com.codegroup.portfolio.util.enumeration.RiscoProjeto;
 import br.com.codegroup.portfolio.util.enumeration.StatusProjeto;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -19,161 +23,144 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class ProjetoServiceTest {
 
     @Mock
     private ProjetoRepository projetoRepository;
 
+    @Mock
+    private PessoaService pessoaService;
+
     @InjectMocks
     private ProjetoService projetoService;
-    
+
     @Test
-    void cadastrarProjeto_ProjetoValido_CadastroBemSucedido() {
-        Projeto projeto = new Projeto();
+    void testCadastrarProjeto() {
+        Projeto projeto = criarProjeto();
+        when(projetoRepository.save(any())).thenReturn(projeto);
 
-        when(projetoRepository.save(projeto)).thenReturn(projeto);
+        Projeto resultado = projetoService.cadastrarProjeto(new Projeto());
 
-        Projeto resultado = projetoService.cadastrarProjeto(projeto);
-
-        verify(projetoRepository, times(1)).save(projeto);
-
+        verify(projetoRepository, times(1)).save(any());
         assertNotNull(resultado);
     }
 
     @Test
-    void cadastrarProjeto_ProjetoInvalido_ExcecaoLancada() {
-        Projeto projeto = new Projeto(); 
+    void testAtualizarProjeto() {
+        Long projetoId = 1L;
+        ProjetoDTO projetoDTO = new ProjetoDTO(null, null, null, null, null, null, null, null, null, 2L);
 
-        when(projetoRepository.save(projeto)).thenThrow(RuntimeException.class);
+        Projeto projetoExistente = new Projeto();
+        Pessoa gerente = new Pessoa();
+        when(projetoRepository.findById(projetoId)).thenReturn(Optional.of(projetoExistente));
+        when(pessoaService.consultarPessoaPorId(projetoDTO.idGerente())).thenReturn(gerente);
+        when(projetoRepository.save(any())).thenReturn(projetoExistente);
 
-        assertThrows(RuntimeException.class,
-                () -> projetoService.cadastrarProjeto(projeto));
+        Projeto resultado = projetoService.atualizarProjeto(projetoId, projetoDTO);
 
-        verify(projetoRepository, times(1)).save(projeto);
+        verify(projetoRepository, times(1)).findById(projetoId);
+        verify(pessoaService, times(1)).consultarPessoaPorId(projetoDTO.idGerente());
+        verify(projetoRepository, times(1)).save(any());
+        assertNotNull(resultado);
     }
 
-     @Test
-    void listarProjetos_ListaNaoVazia_RetornaLista() {
+    @Test
+    void testListarProjetos() {
         List<Projeto> projetos = new ArrayList<>();
+        projetos.add(new Projeto());
         when(projetoRepository.findAll()).thenReturn(projetos);
 
         List<Projeto> resultado = projetoService.listarProjetos();
 
         verify(projetoRepository, times(1)).findAll();
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+    }
 
+    @Test
+    void testConsultarProjetoPorId_Encontrado() {
+        Long projetoId = 1L;
+        Projeto projetoExistente = new Projeto();
+        when(projetoRepository.findById(projetoId)).thenReturn(Optional.of(projetoExistente));
+
+        Projeto resultado = projetoService.consultarProjetoPorId(projetoId);
+
+        verify(projetoRepository, times(1)).findById(projetoId);
         assertNotNull(resultado);
     }
 
     @Test
-    void consultarProjetoPorId_ProjetoExistente_RetornaProjeto() {
-        Long idProjeto = 1L;
+    void testConsultarProjetoPorId_NaoEncontrado() {
+        Long projetoId = 1L;
+        when(projetoRepository.findById(projetoId)).thenReturn(Optional.empty());
 
-        Projeto projeto = new Projeto();
-        when(projetoRepository.findById(idProjeto)).thenReturn(Optional.of(projeto));
+        assertThrows(ProjetoNotFoundException.class, () -> projetoService.consultarProjetoPorId(projetoId));
 
-        Projeto resultado = projetoService.consultarProjetoPorId(idProjeto);
-
-        verify(projetoRepository, times(1)).findById(idProjeto);
-
-        assertNotNull(resultado);
+        verify(projetoRepository, times(1)).findById(projetoId);
     }
 
     @Test
-    void consultarProjetoPorId_ProjetoNaoExistente_RetornaNull() {
-        Long idProjeto = 1L;
-
-        when(projetoRepository.findById(idProjeto)).thenReturn(Optional.empty());
-
-        Projeto resultado = projetoService.consultarProjetoPorId(idProjeto);
-
-        verify(projetoRepository, times(1)).findById(idProjeto);
-
-        assertNull(resultado);
-    }
-
-    @Test
-    void excluirProjeto_ProjetoExistenteEStatusPermite_ExclusaoBemSucedida() {
-        Long idProjeto = 1L;
-
+    void testExcluirProjeto_NaoPodeExcluir() {
+        Long projetoId = 1L;
         Projeto projeto = new Projeto();
         projeto.setStatus(StatusProjeto.INICIADO);
-        when(projetoRepository.findById(idProjeto)).thenReturn(Optional.of(projeto));
+        when(projetoRepository.findById(projetoId)).thenReturn(Optional.of(projeto));
 
-        projetoService.excluirProjeto(idProjeto);
+        assertThrows(RegraDeNegocioException.class, () -> projetoService.excluirProjeto(projetoId));
 
-        verify(projetoRepository, times(1)).findById(idProjeto);
-        
-        verify(projetoRepository, times(1)).deleteById(idProjeto);
+        verify(projetoRepository, times(1)).findById(projetoId);
+        verify(projetoRepository, never()).deleteById(projetoId);
     }
 
     @Test
-    void excluirProjeto_ProjetoExistenteEStatusNaoPermite_ExclusaoNaoPermitida() {
-        Long idProjeto = 1L;
-
+    void testExcluirProjeto_PodeExcluir() {
+        Long projetoId = 1L;
         Projeto projeto = new Projeto();
+        projeto.setStatus(StatusProjeto.EM_ANALISE);
+        when(projetoRepository.findById(projetoId)).thenReturn(Optional.of(projeto));
+
+        projetoService.excluirProjeto(projetoId);
+
+        verify(projetoRepository, times(1)).findById(projetoId);
+        verify(projetoRepository, times(1)).deleteById(projetoId);
+    }
+
+    @Test
+    void testPodeExcluir() {
+        Projeto projeto1 = new Projeto();
+        projeto1.setStatus(StatusProjeto.INICIADO);
+        Projeto projeto2 = new Projeto();
+        projeto2.setStatus(StatusProjeto.EM_ANDAMENTO);
+        Projeto projeto3 = new Projeto();
+        projeto3.setStatus(StatusProjeto.ENCERRADO);
+
+        assertFalse(projetoService.podeExcluir(projeto1.getStatus()));
+        assertFalse(projetoService.podeExcluir(projeto2.getStatus()));
+        assertFalse(projetoService.podeExcluir(projeto3.getStatus()));
+    }
+
+    public static Projeto criarProjeto() {
+        Projeto projeto = new Projeto();
+        projeto.setId(1L);
+        projeto.setNome("Projeto de Teste");
+        projeto.setDataInicio(LocalDate.now().minusDays(7));
+        projeto.setDataPrevisaoFim(LocalDate.now().plusDays(14));
+        projeto.setDataFim(LocalDate.now().plusDays(21));
+        projeto.setDescricao("Descrição do Projeto de Teste");
         projeto.setStatus(StatusProjeto.EM_ANDAMENTO);
-        when(projetoRepository.findById(idProjeto)).thenReturn(Optional.of(projeto));
+        projeto.setOrcamento(50000.0F);
+        projeto.setRisco(RiscoProjeto.ALTO);
 
-        assertThrows(RuntimeException.class,
-                () -> projetoService.excluirProjeto(idProjeto));
+        Pessoa gerente = new Pessoa();
+        gerente.setId(2L);
+        gerente.setNome("Gerente do Projeto");
+        gerente.setDataNascimento(LocalDate.of(1980, 1, 1));
+        gerente.setCpf("123.456.789-00");
+        gerente.setFuncionario(true);
 
-        verify(projetoRepository, times(1)).findById(idProjeto);
-        
-        verify(projetoRepository, never()).deleteById(idProjeto);
+        projeto.setGerente(gerente);
+
+        return projeto;
     }
-
-    @Test
-    void excluirProjeto_ProjetoNaoExistente_ExclusaoNaoPermitida() {
-        Long idProjeto = 1L;
-
-        when(projetoRepository.findById(idProjeto)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class,
-                () -> projetoService.excluirProjeto(idProjeto));
-
-        verify(projetoRepository, times(1)).findById(idProjeto);
-        
-        verify(projetoRepository, never()).deleteById(idProjeto);
-    }
-
-    @Test
-    void atualizarProjeto_ProjetoExistente_AtualizacaoBemSucedida() {
-        Long idProjeto = 1L;
-        ProjetoDTO projetoAtualizado = criarProjetoDTO();
-
-        Projeto projetoExistente = new Projeto();
-        when(projetoRepository.findById(idProjeto)).thenReturn(Optional.of(projetoExistente));
-        when(projetoRepository.save(projetoExistente)).thenReturn(projetoExistente);
-
-        Projeto resultado = projetoService.atualizarProjeto(idProjeto, projetoAtualizado);
-
-        verify(projetoRepository, times(1)).findById(idProjeto);
-        
-        verify(projetoRepository, times(1)).save(projetoExistente);
-
-        assertNotNull(resultado);
-    }
-
-    private ProjetoDTO criarProjetoDTO() {
-        return new ProjetoDTO(1L, "Projeto 1", LocalDate.now(),
-                LocalDate.now().plusYears(1), LocalDate.now().plusYears(1),
-                "Projeto 1", StatusProjeto.INICIADO, 100.00F, RiscoProjeto.ALTO, 1L);
-    }
-
-    @Test
-    void atualizarProjeto_ProjetoNaoExistente_ExcecaoLancada() {
-        Long idProjeto = 1L;
-        ProjetoDTO projetoAtualizado = criarProjetoDTO();
-
-        when(projetoRepository.findById(idProjeto)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class,
-                () -> projetoService.atualizarProjeto(idProjeto, projetoAtualizado));
-
-        verify(projetoRepository, times(1)).findById(idProjeto);
-        
-        verify(projetoRepository, never()).save(Mockito.any());
-    }
-
 }

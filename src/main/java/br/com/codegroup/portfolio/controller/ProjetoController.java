@@ -6,6 +6,7 @@ import br.com.codegroup.portfolio.model.entity.Pessoa;
 import br.com.codegroup.portfolio.model.entity.Projeto;
 import br.com.codegroup.portfolio.service.PessoaService;
 import br.com.codegroup.portfolio.service.ProjetoService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,14 +20,11 @@ import static br.com.codegroup.portfolio.util.ProjetoMapper.*;
 @RequestMapping("/projetos")
 public class ProjetoController {
 
-    private final ProjetoService projetoService;
+    @Autowired
+    private ProjetoService projetoService;
 
-    private final PessoaService pessoaService;
-
-    public ProjetoController(ProjetoService projetoService, PessoaService pessoaService) {
-        this.projetoService = projetoService;
-        this.pessoaService = pessoaService;
-    }
+    @Autowired
+    private PessoaService pessoaService;
 
     @PostMapping
     public ResponseEntity<ProjetoResponse> cadastrarProjeto(@RequestBody ProjetoDTO projetoDTO) {

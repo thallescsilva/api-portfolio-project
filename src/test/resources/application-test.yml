@@ -1,0 +1,33 @@
+# application-test.yml
+
+# Configurações do servidor
+server:
+  port: 8081
+
+springfox:
+  documentation:
+    enabled: false
+
+# Configurações do banco de dados H2
+spring:
+  profiles:
+    active: test
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+# Configurações do logging
+logging:
+  level:
+    root: info
+    org.springframework.web: debug
+    org.springframework.boot.autoconfigure.jdbc.DataSourceInitializer: DEBUG

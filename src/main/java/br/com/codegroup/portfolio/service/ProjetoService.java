@@ -7,6 +7,7 @@ import br.com.codegroup.portfolio.model.entity.Pessoa;
 import br.com.codegroup.portfolio.model.entity.Projeto;
 import br.com.codegroup.portfolio.repository.ProjetoRepository;
 import br.com.codegroup.portfolio.util.enumeration.StatusProjeto;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,13 +15,11 @@ import java.util.List;
 @Service
 public class ProjetoService {
 
-    private final ProjetoRepository projetoRepository;
-    private final PessoaService pessoaService;
+    @Autowired
+    private ProjetoRepository projetoRepository;
 
-    public ProjetoService(ProjetoRepository projetoRepository, PessoaService pessoaService) {
-        this.projetoRepository = projetoRepository;
-        this.pessoaService = pessoaService;
-    }
+    @Autowired
+    private PessoaService pessoaService;
 
     public Projeto cadastrarProjeto(Projeto projeto) {
         return projetoRepository.save(projeto);
@@ -54,15 +53,6 @@ public class ProjetoService {
                 .orElseThrow(ProjetoNotFoundException::new);
     }
 
-    public Projeto consultarProjetoPorNome(String nome) {
-        return projetoRepository.findByNome(nome)
-                .orElseThrow(ProjetoNotFoundException::new);
-    }
-
-    public List<Projeto> listarProjetosPorStatus(StatusProjeto status) {
-        return projetoRepository.findByStatus(status);
-    }
-
     public void excluirProjeto(Long id) {
         Projeto projeto = projetoRepository.findById(id)
                 .orElseThrow(ProjetoNotFoundException::new);
@@ -74,7 +64,7 @@ public class ProjetoService {
         projetoRepository.deleteById(id);
     }
 
-    private boolean podeExcluir(StatusProjeto status) {
+    public boolean podeExcluir(StatusProjeto status) {
         return status != StatusProjeto.INICIADO
                 && status != StatusProjeto.EM_ANDAMENTO
                 && status != StatusProjeto.ENCERRADO;

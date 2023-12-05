@@ -3,6 +3,7 @@ package br.com.codegroup.portfolio.controller;
 import br.com.codegroup.portfolio.model.dto.PessoaDTO;
 import br.com.codegroup.portfolio.model.entity.Pessoa;
 import br.com.codegroup.portfolio.service.PessoaService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,11 +17,8 @@ import static br.com.codegroup.portfolio.util.PessoaMapper.toListDto;
 @RequestMapping("/pessoas")
 public class PessoaController {
 
-    private final PessoaService pessoaService;
-
-    public PessoaController(PessoaService pessoaService) {
-        this.pessoaService = pessoaService;
-    }
+    @Autowired
+    private PessoaService pessoaService;
 
     @PostMapping
     public ResponseEntity<Pessoa> cadastrarPessoa(@RequestBody Pessoa pessoa) {

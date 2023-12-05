@@ -2,6 +2,7 @@ package br.com.codegroup.portfolio.controller;
 
 import br.com.codegroup.portfolio.model.ProjetoMembrosResponse;
 import br.com.codegroup.portfolio.service.AssociacaoMembrosService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,11 +13,8 @@ import java.util.List;
 @RequestMapping("/membros")
 public class AssociacaoMembrosController {
 
-    private final AssociacaoMembrosService associacaoMembrosService;
-
-    public AssociacaoMembrosController(AssociacaoMembrosService associacaoMembrosService) {
-        this.associacaoMembrosService = associacaoMembrosService;
-    }
+    @Autowired
+    private AssociacaoMembrosService associacaoMembrosService;
 
     @GetMapping
     public ResponseEntity<List<ProjetoMembrosResponse>> listarAssociacoes() {
