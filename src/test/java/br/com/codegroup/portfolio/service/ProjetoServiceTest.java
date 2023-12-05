@@ -1,26 +1,23 @@
 package br.com.codegroup.portfolio.service;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
+import br.com.codegroup.portfolio.model.dto.ProjetoDTO;
+import br.com.codegroup.portfolio.model.entity.Projeto;
+import br.com.codegroup.portfolio.repository.ProjetoRepository;
+import br.com.codegroup.portfolio.util.enumeration.RiscoProjeto;
+import br.com.codegroup.portfolio.util.enumeration.StatusProjeto;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import br.com.codegroup.portfolio.model.entity.Projeto;
-import br.com.codegroup.portfolio.repository.ProjetoRepository;
-import br.com.codegroup.portfolio.util.enumeration.StatusProjeto;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 class ProjetoServiceTest {
@@ -143,7 +140,7 @@ class ProjetoServiceTest {
     @Test
     void atualizarProjeto_ProjetoExistente_AtualizacaoBemSucedida() {
         Long idProjeto = 1L;
-        Projeto projetoAtualizado = new Projeto();
+        ProjetoDTO projetoAtualizado = criarProjetoDTO();
 
         Projeto projetoExistente = new Projeto();
         when(projetoRepository.findById(idProjeto)).thenReturn(Optional.of(projetoExistente));
@@ -158,10 +155,16 @@ class ProjetoServiceTest {
         assertNotNull(resultado);
     }
 
+    private ProjetoDTO criarProjetoDTO() {
+        return new ProjetoDTO(1L, "Projeto 1", LocalDate.now(),
+                LocalDate.now().plusYears(1), LocalDate.now().plusYears(1),
+                "Projeto 1", StatusProjeto.INICIADO, 100.00F, RiscoProjeto.ALTO, 1L);
+    }
+
     @Test
     void atualizarProjeto_ProjetoNaoExistente_ExcecaoLancada() {
         Long idProjeto = 1L;
-        Projeto projetoAtualizado = new Projeto();
+        ProjetoDTO projetoAtualizado = criarProjetoDTO();
 
         when(projetoRepository.findById(idProjeto)).thenReturn(Optional.empty());
 

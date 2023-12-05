@@ -1,65 +1,61 @@
 package br.com.codegroup.portfolio.controller;
 
-import java.util.List;
-
-import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
-import org.springframework.beans.factory.annotation.Autowired;
+import br.com.codegroup.portfolio.model.ProjetoResponse;
+import br.com.codegroup.portfolio.model.dto.ProjetoDTO;
+import br.com.codegroup.portfolio.model.entity.Pessoa;
+import br.com.codegroup.portfolio.model.entity.Projeto;
+import br.com.codegroup.portfolio.service.PessoaService;
+import br.com.codegroup.portfolio.service.ProjetoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import br.com.codegroup.portfolio.model.dto.ProjetoDTO;
-import br.com.codegroup.portfolio.model.entity.Projeto;
-import br.com.codegroup.portfolio.service.ProjetoService;
+import java.util.List;
+
+import static br.com.codegroup.portfolio.util.ProjetoMapper.*;
+
 
 @RestController
 @RequestMapping("/projetos")
 public class ProjetoController {
 
-    @Autowired
-    private ProjetoService projetoService;
+    private final ProjetoService projetoService;
 
-    @Autowired
-    private ModelMapper modelMapper;
+    private final PessoaService pessoaService;
+
+    public ProjetoController(ProjetoService projetoService, PessoaService pessoaService) {
+        this.projetoService = projetoService;
+        this.pessoaService = pessoaService;
+    }
 
     @PostMapping
-    public ResponseEntity<ProjetoDTO> cadastrarProjeto(@RequestBody ProjetoDTO projetoDTO) {
-        Projeto projeto = modelMapper.map(projetoDTO, Projeto.class);
+    public ResponseEntity<ProjetoResponse> cadastrarProjeto(@RequestBody ProjetoDTO projetoDTO) {
+        Projeto projeto = toEntity(projetoDTO);
+
+        Pessoa gerente = pessoaService.consultarPessoaPorId(projetoDTO.idGerente());
+        projeto.setGerente(gerente);
+
         projeto = projetoService.cadastrarProjeto(projeto);
-        ProjetoDTO projetoCadastradoDTO = modelMapper.map(projeto, ProjetoDTO.class);
-        return new ResponseEntity<>(projetoCadastradoDTO, HttpStatus.CREATED);
+
+        return new ResponseEntity<>(toDto(projeto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Projeto> atualizarProjeto(@PathVariable Long id, @RequestBody Projeto projeto) {
-        Projeto projetoAtualizado = projetoService.atualizarProjeto(id, projeto);
-        return ResponseEntity.ok(projetoAtualizado);
+    public ResponseEntity<ProjetoResponse> atualizarProjeto(@PathVariable Long id, @RequestBody ProjetoDTO projetoDTO) {
+        Projeto projetoAtualizado = projetoService.atualizarProjeto(id, projetoDTO);
+        return ResponseEntity.ok(toDto(projetoAtualizado));
     }
 
     @GetMapping
-    public ResponseEntity<List<ProjetoDTO>> listarProjetos() {
+    public ResponseEntity<List<ProjetoResponse>> listarProjetos() {
         List<Projeto> projetos = projetoService.listarProjetos();
-        List<ProjetoDTO> projetoDTOs = modelMapper.map(projetos, new TypeToken<List<ProjetoDTO>>() {}.getType());
-        return new ResponseEntity<>(projetoDTOs, HttpStatus.OK);
+        return new ResponseEntity<>(toListDto(projetos), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProjetoDTO> consultarProjeto(@PathVariable Long id) {
+    public ResponseEntity<ProjetoResponse> consultarProjeto(@PathVariable Long id) {
         Projeto projeto = projetoService.consultarProjetoPorId(id);
-        if (projeto != null) {
-            ProjetoDTO projetoDTO = modelMapper.map(projeto, ProjetoDTO.class);
-            return new ResponseEntity<>(projetoDTO, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        return new ResponseEntity<>(toDto(projeto), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")

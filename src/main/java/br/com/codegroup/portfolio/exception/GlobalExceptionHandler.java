@@ -18,8 +18,22 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ProjetoNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ResponseEntity<String> handleProjetoNotFoundException(ProjetoNotFoundException e) {
+    public ResponseEntity<String> handleProjetoNotFoundException() {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body("Projeto não encontrado: " + e.getMessage());
-}
+                .body("Projeto não encontrado.");
+    }
+
+    @ExceptionHandler(PessoaNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<String> handlePessoaNotFoundException() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("Pessoa não encontrada.");
+    }
+
+    @ExceptionHandler(RegraDeNegocioException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public ResponseEntity<String> handleRegraDeNegocioException(RegraDeNegocioException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(e.getMessage());
+    }
 }
