@@ -44,7 +44,8 @@ Os seguintes itens deverão ser instalados no seu sistema:
 1. Na execução da linha de comandos:
 
     ```bash
-    git clone https://github.com/spring-projects/spring-petclinic.git
+    git clone https://github.com/thallescsilva/api-portfolio-project.git
+
     ```
 
 1. No Eclipse ou STS:
